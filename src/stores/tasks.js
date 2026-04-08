@@ -7,15 +7,36 @@ export const useTasksStore = defineStore('tasks', () => {
   const loading = ref(false);
   const error = ref(null);
 
+  const filterText = ref('');
+
   const pendingTasks = computed(() => tasks.value.filter((t) => !t.done));
   const completedTasks = computed(() => tasks.value.filter((t) => t.done));
+
+  const filteredTasks = computed(() =>
+    tasks.value.filter((t) =>
+      t.title.toLowerCase().includes(filterText.value.toLowerCase())
+    )
+  );
+
+  const filteredPendingTasks = computed(() =>
+    filteredTasks.value.filter((t) => !t.done)
+  );
+
+  const filteredCompletedTasks = computed(() =>
+    filteredTasks.value.filter((t) => t.done)
+  );
 
   async function fetchTasks() {
     loading.value = true;
     error.value = null;
+
     try {
       const response = await tasksApi.getAll();
-      tasks.value = response.data;
+
+      tasks.value = response.data.map((t) => ({
+        ...t,
+        priority: t.priority || 'normal',
+      }));
     } catch (err) {
       error.value = 'Erro ao carregar tarefas.';
       console.error(err);
@@ -24,12 +45,19 @@ export const useTasksStore = defineStore('tasks', () => {
     }
   }
 
-  async function addTask(title) {
+  async function addTask(title, priority = 'normal') {
     if (!title.trim()) return;
+
     error.value = null;
+
     try {
-      const response = await tasksApi.create(title.trim());
-      tasks.value.push(response.data);
+      const response = await tasksApi.create(title.trim(), priority);
+
+      
+      tasks.value.push({
+        ...response.data,
+        priority: priority,
+      });
     } catch (err) {
       error.value = 'Erro ao adicionar tarefa.';
       console.error(err);
@@ -39,11 +67,22 @@ export const useTasksStore = defineStore('tasks', () => {
   async function toggleTask(id) {
     const task = tasks.value.find((t) => t.id === id);
     if (!task) return;
+
     error.value = null;
+
     try {
-      const response = await tasksApi.update(id, { done: !task.done });
+      const response = await tasksApi.update(id, {
+        done: !task.done,
+      });
+
       const index = tasks.value.findIndex((t) => t.id === id);
-      if (index !== -1) tasks.value[index] = response.data;
+
+      if (index !== -1) {
+        tasks.value[index] = {
+          ...response.data,
+          priority: task.priority || 'normal', 
+        };
+      }
     } catch (err) {
       error.value = 'Erro ao atualizar tarefa.';
       console.error(err);
@@ -52,6 +91,7 @@ export const useTasksStore = defineStore('tasks', () => {
 
   async function removeTask(id) {
     error.value = null;
+
     try {
       await tasksApi.remove(id);
       tasks.value = tasks.value.filter((t) => t.id !== id);
@@ -61,13 +101,22 @@ export const useTasksStore = defineStore('tasks', () => {
     }
   }
 
-  async function updateTaskTitle(id, title) {
-    if (!title.trim()) return;
+  async function updateTask(id, data) {
+    if (!data.title.trim()) return;
+
     error.value = null;
+
     try {
-      const response = await tasksApi.update(id, { title: title.trim() });
+      const response = await tasksApi.update(id, data);
+
       const index = tasks.value.findIndex((t) => t.id === id);
-      if (index !== -1) tasks.value[index] = response.data;
+
+      if (index !== -1) {
+        tasks.value[index] = {
+          ...response.data,
+          priority: data.priority, 
+        };
+      }
     } catch (err) {
       error.value = 'Erro ao editar tarefa.';
       console.error(err);
@@ -78,12 +127,19 @@ export const useTasksStore = defineStore('tasks', () => {
     tasks,
     loading,
     error,
+    filterText,
+
     pendingTasks,
     completedTasks,
+
+    filteredTasks,
+    filteredPendingTasks,
+    filteredCompletedTasks,
+
     fetchTasks,
     addTask,
     toggleTask,
     removeTask,
-    updateTaskTitle,
+    updateTask,
   };
 });

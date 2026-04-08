@@ -1,6 +1,17 @@
 <template>
   <div>
-    <p v-if="store.error" class="error-message">{{ store.error }}</p>
+    <!-- 🔁 erro + retry -->
+    <div v-if="store.error" class="error-message">
+      <p>{{ store.error }}</p>
+      <button @click="store.fetchTasks()">Tentar novamente</button>
+    </div>
+
+    <!-- 🔎 campo de busca -->
+    <input
+      v-model="store.filterText"
+      placeholder="Buscar tarefas..."
+      class="search-input"
+    />
 
     <TaskForm
       :editing-task="editingTask"
@@ -9,15 +20,19 @@
       @cancel="handleCancel"
     />
 
-    <p v-if="store.loading" class="loading-message">Carregando tarefas...</p>
+    <p v-if="store.loading" class="loading-message">
+      Carregando tarefas...
+    </p>
 
     <template v-else>
-      <section v-if="store.pendingTasks.length > 0">
+      <!-- Pendentes -->
+      <section v-if="store.filteredPendingTasks.length > 0">
         <h2 class="section-title">
-          Pendentes ({{ store.pendingTasks.length }})
+          Pendentes ({{ store.filteredPendingTasks.length }})
         </h2>
+
         <TaskItem
-          v-for="task in store.pendingTasks"
+          v-for="task in store.filteredPendingTasks"
           :key="task.id"
           :task="task"
           @toggle="handleToggle"
@@ -26,12 +41,14 @@
         />
       </section>
 
-      <section v-if="store.completedTasks.length > 0">
+      <!-- Concluídas -->
+      <section v-if="store.filteredCompletedTasks.length > 0">
         <h2 class="section-title">
-          Concluídas ({{ store.completedTasks.length }})
+          Concluídas ({{ store.filteredCompletedTasks.length }})
         </h2>
+
         <TaskItem
-          v-for="task in store.completedTasks"
+          v-for="task in store.filteredCompletedTasks"
           :key="task.id"
           :task="task"
           @toggle="handleToggle"
@@ -40,6 +57,7 @@
         />
       </section>
 
+      <!-- vazio -->
       <p v-if="store.tasks.length === 0" class="empty-message">
         Nenhuma tarefa cadastrada. Adicione uma acima.
       </p>
@@ -63,12 +81,14 @@ onMounted(() => {
   store.fetchTasks();
 });
 
-function handleAdd(title) {
-  store.addTask(title);
+// ✅ adicionar
+function handleAdd(title, priority) {
+  store.addTask(title, priority);
 }
 
-function handleUpdate(id, title) {
-  store.updateTaskTitle(id, title);
+// 🔥 CORREÇÃO AQUI (faltava isso)
+function handleUpdate(id, title, priority) {
+  store.updateTask(id, { title, priority });
   editingTask.value = null;
 }
 
@@ -91,6 +111,14 @@ function handleRemove(id) {
 </script>
 
 <style scoped>
+.search-input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 12px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
 .section-title {
   font-size: 1rem;
   color: #666;

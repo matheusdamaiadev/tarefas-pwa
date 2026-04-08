@@ -6,9 +6,18 @@
       placeholder="Nova tarefa..."
       class="task-input"
     />
+
+    <!-- 🔽 prioridade -->
+    <select v-model="priority" class="task-select">
+      <option value="baixa">Baixa</option>
+      <option value="normal">Normal</option>
+      <option value="alta">Alta</option>
+    </select>
+
     <button type="submit" class="task-button">
       {{ editingTask ? 'Alterar' : 'Adicionar' }}
     </button>
+
     <button
       v-if="editingTask"
       type="button"
@@ -31,27 +40,40 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['add', 'update', 'cancel']);
+
 const newTask = ref('');
+const priority = ref('normal'); // 🔽 novo
 
 watch(
   () => props.editingTask,
   (task) => {
-    newTask.value = task ? task.title : '';
+    if (task) {
+      newTask.value = task.title;
+      priority.value = task.priority || 'normal'; // 🔽 importante
+    } else {
+      newTask.value = '';
+      priority.value = 'normal';
+    }
   },
+  { immediate: true }
 );
 
 function handleSubmit() {
   if (!newTask.value.trim()) return;
+
   if (props.editingTask) {
     emit('update', props.editingTask.id, newTask.value.trim());
   } else {
-    emit('add', newTask.value.trim());
+    emit('add', newTask.value.trim(), priority.value); // 🔽 envia prioridade
   }
+
   newTask.value = '';
+  priority.value = 'normal';
 }
 
 function handleCancel() {
   newTask.value = '';
+  priority.value = 'normal';
   emit('cancel');
 }
 </script>
@@ -69,12 +91,12 @@ function handleCancel() {
   border: 2px solid #ddd;
   border-radius: 8px;
   font-size: 1rem;
-  outline: none;
-  transition: border-color 0.2s;
 }
 
-.task-input:focus {
-  border-color: #4a90d9;
+.task-select {
+  padding: 12px;
+  border-radius: 8px;
+  border: 2px solid #ddd;
 }
 
 .task-button {
@@ -83,30 +105,12 @@ function handleCancel() {
   color: white;
   border: none;
   border-radius: 8px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.task-button:hover {
-  background-color: #357abd;
 }
 
 .task-button-cancel {
   padding: 12px 16px;
   background-color: transparent;
-  color: #666;
   border: 2px solid #ddd;
   border-radius: 8px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition:
-    border-color 0.2s,
-    color 0.2s;
-}
-
-.task-button-cancel:hover {
-  border-color: #aaa;
-  color: #333;
 }
 </style>

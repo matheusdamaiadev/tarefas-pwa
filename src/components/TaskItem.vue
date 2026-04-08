@@ -6,10 +6,22 @@
         :checked="task.done"
         @change="$emit('toggle', task.id)"
       />
-      <span class="task-title">{{ task.title }}</span>
+
+      <span class="task-title">
+        {{ task.title }}
+        <span
+          class="priority"
+          :class="task.priority || 'normal'"
+        >
+          ({{ task.priority || 'normal' }})
+        </span>
+      </span>
     </label>
+
     <div class="task-actions">
-      <button class="task-edit" @click="$emit('edit', task)">Editar</button>
+      <button class="task-edit" @click="$emit('edit', task)">
+        Editar
+      </button>
       <button class="task-remove" @click="$emit('remove', task.id)">
         Remover
       </button>
@@ -61,6 +73,25 @@ defineEmits(['toggle', 'remove', 'edit']);
 
 .task-title {
   font-size: 1rem;
+}
+
+/* 🔥 prioridade */
+.priority {
+  margin-left: 8px;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.priority.baixa {
+  color: #27ae60;
+}
+
+.priority.normal {
+  color: #f39c12;
+}
+
+.priority.alta {
+  color: #e74c3c;
 }
 
 .task-item.done .task-title {
