@@ -1,17 +1,6 @@
 <template>
   <div>
-    <!-- 🔁 erro + retry -->
-    <div v-if="store.error" class="error-message">
-      <p>{{ store.error }}</p>
-      <button @click="store.fetchTasks()">Tentar novamente</button>
-    </div>
-
-    <!-- 🔎 campo de busca -->
-    <input
-      v-model="store.filterText"
-      placeholder="Buscar tarefas..."
-      class="search-input"
-    />
+    <p v-if="store.error" class="error-message">{{ store.error }}</p>
 
     <TaskForm
       :editing-task="editingTask"
@@ -20,19 +9,13 @@
       @cancel="handleCancel"
     />
 
-    <p v-if="store.loading" class="loading-message">
-      Carregando tarefas...
-    </p>
+    <p v-if="store.loading" class="loading-message">Carregando tarefas...</p>
 
     <template v-else>
-      <!-- Pendentes -->
-      <section v-if="store.filteredPendingTasks.length > 0">
-        <h2 class="section-title">
-          Pendentes ({{ store.filteredPendingTasks.length }})
-        </h2>
-
+      <section v-if="store.pendingTasks.length > 0">
+        <h2 class="section-title">Pendentes ({{ store.pendingTasks.length }})</h2>
         <TaskItem
-          v-for="task in store.filteredPendingTasks"
+          v-for="task in store.pendingTasks"
           :key="task.id"
           :task="task"
           @toggle="handleToggle"
@@ -41,14 +24,10 @@
         />
       </section>
 
-      <!-- Concluídas -->
-      <section v-if="store.filteredCompletedTasks.length > 0">
-        <h2 class="section-title">
-          Concluídas ({{ store.filteredCompletedTasks.length }})
-        </h2>
-
+      <section v-if="store.completedTasks.length > 0">
+        <h2 class="section-title">Concluídas ({{ store.completedTasks.length }})</h2>
         <TaskItem
-          v-for="task in store.filteredCompletedTasks"
+          v-for="task in store.completedTasks"
           :key="task.id"
           :task="task"
           @toggle="handleToggle"
@@ -57,7 +36,6 @@
         />
       </section>
 
-      <!-- vazio -->
       <p v-if="store.tasks.length === 0" class="empty-message">
         Nenhuma tarefa cadastrada. Adicione uma acima.
       </p>
@@ -68,57 +46,46 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
-import TaskForm from '../components/TaskForm.vue';
-import TaskItem from '../components/TaskItem.vue';
-/*import InstallButton from '../components/InstallButton.vue';*/
-import { useTasksStore } from '../stores/tasks.js';
+import { onMounted, ref } from 'vue'
+import TaskForm from '../components/TaskForm.vue'
+import TaskItem from '../components/TaskItem.vue'
+import { useTasksStore } from '../stores/tasks.js'
 
-const store = useTasksStore();
-const editingTask = ref(null);
+const store = useTasksStore()
+const editingTask = ref(null)
 
 onMounted(() => {
-  store.fetchTasks();
-});
+  store.fetchTasks()
+})
 
-// ✅ adicionar
-function handleAdd(title, priority) {
-  store.addTask(title, priority);
+function handleAdd(title) {
+  store.addTask(title)
 }
 
-// 🔥 CORREÇÃO AQUI (faltava isso)
-function handleUpdate(id, title, priority) {
-  store.updateTask(id, { title, priority });
-  editingTask.value = null;
+function handleUpdate(id, title, imgAttachmentKey) {
+  store.updateTask(id, { title, imgAttachmentKey })
+  editingTask.value = null
 }
 
 function handleCancel() {
-  editingTask.value = null;
+  editingTask.value = null
 }
 
 function handleEdit(task) {
-  editingTask.value = task;
+  editingTask.value = task
 }
 
 function handleToggle(id) {
-  store.toggleTask(id);
+  store.toggleTask(id)
 }
 
 function handleRemove(id) {
-  if (editingTask.value?.id === id) editingTask.value = null;
-  store.removeTask(id);
+  if (editingTask.value?.id === id) editingTask.value = null
+  store.removeTask(id)
 }
 </script>
 
 <style scoped>
-.search-input {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 12px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-}
-
 .section-title {
   font-size: 1rem;
   color: #666;
