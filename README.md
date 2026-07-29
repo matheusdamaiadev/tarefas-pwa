@@ -37,24 +37,21 @@ npm run dev
 npm run build
 ```
 
-### Run Headed Component Tests with [Cypress Component Testing](https://on.cypress.io/component)
+### Run End-to-End Tests with [Playwright](https://playwright.dev)
 
 ```sh
-npm run test:unit:dev # or `npm run test:unit` for headless testing
-```
+# Install browsers for the first run
+npx playwright install
 
-### Run End-to-End Tests with [Cypress](https://www.cypress.io/)
-
-```sh
-npm run test:e2e:dev
-```
-
-This runs the end-to-end tests against the Vite development server.
-It is much faster than the production build.
-
-But it's still recommended to test the production build with `test:e2e` before deploying (e.g. in CI environments):
-
-```sh
+# When testing on CI, must build the project first
 npm run build
+
+# Runs the end-to-end tests
 npm run test:e2e
+# Runs the tests only on Chromium
+npm run test:e2e -- --project=chromium
+# Runs the tests of a specific file
+npm run test:e2e -- tests/example.spec.ts
+# Runs the tests in debug mode
+npm run test:e2e -- --debug
 ```

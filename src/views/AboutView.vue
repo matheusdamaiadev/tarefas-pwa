@@ -19,6 +19,8 @@
       <li>Workbox para gerenciamento de cache</li>
     </ul>
   </div>
+
+  
 </template>
 
 <style scoped>
