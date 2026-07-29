@@ -54,6 +54,6 @@ const { tasks, pendingTasks, completedTasks, addTask, toggleTask, removeTask } =
   text-align: center;
   color: #999;
   margin-top: 40px;
-  font-size: 0.95rem;
+  font-size: 0.96rem;
 }
 </style>
