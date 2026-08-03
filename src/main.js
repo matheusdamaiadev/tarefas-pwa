@@ -8,7 +8,7 @@ registerSW({
     if (registration) {
       setInterval(() => {
         registration.update();
-      }, 60 * 1000); // verifica a cada 60 segundos
+      }, 60 * 1000);
     }
   },
 });
