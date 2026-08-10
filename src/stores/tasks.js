@@ -24,11 +24,12 @@ export const useTasksStore = defineStore('tasks', () => {
     }
   }
 
-  async function addTask(title) {
-    if (!title.trim()) return
+  // Passo 4.3: Atualizado para aceitar payload como objeto { title, imgAttachmentKey }
+  async function addTask(payload) {
+    if (!payload?.title?.trim()) return
     error.value = null
     try {
-      const response = await tasksApi.create(title.trim())
+      const response = await tasksApi.create(payload)
       tasks.value.push(response.data)
     } catch (err) {
       error.value = 'Erro ao adicionar tarefa.'

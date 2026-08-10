@@ -59,12 +59,14 @@ onMounted(() => {
   store.fetchTasks()
 })
 
-function handleAdd(title) {
-  store.addTask(title)
+// 4.3: Recebe o payload completo ({ title, imgAttachmentKey }) vindo do TaskForm
+function handleAdd(payload) {
+  store.addTask(payload)
 }
 
-function handleUpdate(id, title, imgAttachmentKey) {
-  store.updateTask(id, { title, imgAttachmentKey })
+// Recebe o ID e o payload completo ({ title, imgAttachmentKey })
+function handleUpdate(id, payload) {
+  store.updateTask(id, payload)
   editingTask.value = null
 }
 

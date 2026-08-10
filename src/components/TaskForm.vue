@@ -20,35 +20,45 @@
       </button>
     </div>
 
-    <div v-if="editingTask" class="image-section">
+    <div class="image-section">
+      <!-- 1. Uso de editingTask?.img_url para evitar erro quando editingTask for null -->
       <img
-        v-if="previewUrl || editingTask.img_url"
-        :src="previewUrl || editingTask.img_url"
+        v-if="previewUrl || editingTask?.img_url"
+        :src="previewUrl || editingTask?.img_url"
         class="image-preview"
         alt="Imagem da tarefa"
       />
       <label class="image-label" :class="{ disabled: uploading }">
         <span v-if="uploading" class="upload-status">Enviando...</span>
+        <!-- 4.5 Texto adaptativo se é celular ou desktop -->
         <span v-else>
-          {{ previewUrl || editingTask.img_url
+          {{ previewUrl || editingTask?.img_url
             ? 'Trocar imagem'
-            : 'Adicionar imagem'
+            : isMobileDevice
+              ? 'Fotografar'
+              : 'Adicionar imagem'
           }}
         </span>
         <input
           type="file"
           accept="image/jpeg,image/png"
+          capture="environment"
           class="image-input"
           :disabled="uploading"
           @change="handleImageChange"
         />
       </label>
+
+      <!-- 4.4 Texto de ajuda -->
+      <p class="image-help">
+        Em celular, o botão pode abrir a câmera. Em notebook, abre o seletor de arquivos.
+      </p>
     </div>
   </form>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onBeforeUnmount } from 'vue'
 import tasksApi from '../api/tasksApi.js'
 
 const props = defineProps({
@@ -59,15 +69,24 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['add', 'update', 'cancel'])
+
 const newTask = ref('')
 const previewUrl = ref(null)
 const imgAttachmentKey = ref(null)
 const uploading = ref(false)
 
+// 4.5 Detecção de dispositivo mobile/touch
+const isMobileDevice = ref(!window.matchMedia('(pointer: fine)').matches)
+
 watch(
   () => props.editingTask,
   (task) => {
     newTask.value = task ? task.title : ''
+
+    if (previewUrl.value) {
+      URL.revokeObjectURL(previewUrl.value)
+    }
+
     previewUrl.value = null
     imgAttachmentKey.value = null
   },
@@ -75,14 +94,26 @@ watch(
 
 async function handleImageChange(event) {
   const file = event.target.files[0]
+
   if (!file) return
+
+  if (previewUrl.value) {
+    URL.revokeObjectURL(previewUrl.value)
+  }
+
   previewUrl.value = URL.createObjectURL(file)
   uploading.value = true
+
   try {
     const response = await tasksApi.uploadImage(file)
     imgAttachmentKey.value = response.data.attachment_key
   } catch (err) {
     console.error('Erro ao fazer upload da imagem', err)
+
+    if (previewUrl.value) {
+      URL.revokeObjectURL(previewUrl.value)
+    }
+
     previewUrl.value = null
     imgAttachmentKey.value = null
   } finally {
@@ -90,29 +121,47 @@ async function handleImageChange(event) {
   }
 }
 
+// 4.2 Atualizado para enviar objeto payload em vez de apenas a string no add/update
 function handleSubmit() {
   if (!newTask.value.trim()) return
-  if (props.editingTask) {
-    emit(
-      'update',
-      props.editingTask.id,
-      newTask.value.trim(),
-      imgAttachmentKey.value
-    )
-  } else {
-    emit( 'add', newTask.value.trim() )
+
+  const payload = {
+    title: newTask.value.trim(),
+    imgAttachmentKey: imgAttachmentKey.value,
   }
+
+  if (props.editingTask) {
+    emit('update', props.editingTask.id, payload)
+  } else {
+    emit('add', payload)
+  }
+
   newTask.value = ''
+  if (previewUrl.value) {
+    URL.revokeObjectURL(previewUrl.value)
+  }
   previewUrl.value = null
   imgAttachmentKey.value = null
 }
 
 function handleCancel() {
   newTask.value = ''
+
+  if (previewUrl.value) {
+    URL.revokeObjectURL(previewUrl.value)
+  }
+
   previewUrl.value = null
   imgAttachmentKey.value = null
+
   emit('cancel')
 }
+
+onBeforeUnmount(() => {
+  if (previewUrl.value) {
+    URL.revokeObjectURL(previewUrl.value)
+  }
+})
 </script>
 
 <style scoped>
@@ -177,6 +226,7 @@ function handleCancel() {
 
 .image-section {
   display: flex;
+  flex-wrap: wrap; /* Adicionado para permitir que a legenda pule linha */
   align-items: center;
   gap: 12px;
   padding: 10px 12px;
@@ -223,5 +273,13 @@ function handleCancel() {
 
 .upload-status {
   color: #888;
+}
+
+/* 4.4 Estilo do texto de ajuda */
+.image-help {
+  font-size: 0.75rem;
+  color: #999;
+  margin: 0;
+  flex-basis: 100%;
 }
 </style>
