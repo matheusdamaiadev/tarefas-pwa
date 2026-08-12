@@ -24,9 +24,10 @@ export const useTasksStore = defineStore('tasks', () => {
     }
   }
 
-  // Passo 4.3: Atualizado para aceitar payload como objeto { title, imgAttachmentKey }
   async function addTask(payload) {
-    if (!payload?.title?.trim()) return
+    const titleText = typeof payload === 'string' ? payload : payload?.title
+    if (!titleText?.trim()) return
+
     error.value = null
     try {
       const response = await tasksApi.create(payload)

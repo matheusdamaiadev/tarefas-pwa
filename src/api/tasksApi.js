@@ -5,8 +5,15 @@ const tasksApi = {
     return apiClient.get('/tasks')
   },
 
-  create(title) {
-    return apiClient.post('/tasks', { title })
+  create(payload) {
+    const data = typeof payload === 'string' 
+      ? { title: payload }
+      : { 
+          title: payload.title, 
+          img_attachment_key: payload.imgAttachmentKey || payload.img_attachment_key || null 
+        }
+
+    return apiClient.post('/tasks', data)
   },
 
   update(id, data) {
