@@ -9,6 +9,7 @@ const tasksApi = {
     const data = typeof payload === 'string' 
       ? { title: payload }
       : { 
+          ...payload,
           title: payload.title, 
           img_attachment_key: payload.imgAttachmentKey || payload.img_attachment_key || null 
         }
@@ -16,7 +17,14 @@ const tasksApi = {
     return apiClient.post('/tasks', data)
   },
 
-  update(id, data) {
+  update(id, payload) {
+    const data = typeof payload === 'string' 
+      ? { title: payload }
+      : {
+          ...payload,
+          img_attachment_key: payload.imgAttachmentKey || payload.img_attachment_key || null
+        }
+
     return apiClient.patch(`/tasks/${id}`, data)
   },
 
